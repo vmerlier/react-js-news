@@ -25,6 +25,7 @@
 
 .App-content {
     padding: 20px;
+    
 }
 
 @keyframes App-logo-spin {
@@ -35,3 +36,4 @@
 .error-toast {
     color: #e74c3c;
 }
+

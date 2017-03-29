@@ -8,12 +8,16 @@ import defaultPicture from './components/img/default.jpg'
 
 const Materialize = window.Materialize
 
-const APP_TITLE = 'Awesome App'
+const APP_TITLE = 'News App'
 //update document title (displayed in the opened browser tab)
 document.title = APP_TITLE
 
 //web api utils
 import { get, ENDPOINTS, NEWS_API_KEY } from './utils/api'
+import { getNews, addNews } from './utils/webstorage'
+
+
+
 
 //components
 import NewsCard from './components/NewsCard'
@@ -26,6 +30,7 @@ class App extends Component {
         super( props )
         this.state = {
             news: undefined,
+            search: '',
         }
     }
 
@@ -46,15 +51,18 @@ class App extends Component {
                             <button type="submit" className="waves-effect waves-light btn">
                                 Get some news!
                             </button>
-
+                            <div className="input-field ">
+                                <input id="recherche" type="text" class="validate" value={ this.state.search } onChange={ this.handleChange } />
+                                <label for="recherche"> Search some news </label>
+                            </div>
                         </form>
 
                     </div>
 
                     <div className="row" style={ { marginTop: 20 } } >
-                        <div className="col s12 m6 offset-m3">
-                            { this.displayNews() }
-                        </div>
+
+                        { this.getCards() }
+
                     </div>
                 </div>
 
@@ -65,6 +73,9 @@ class App extends Component {
 
     //method triggered by onSubmit event of the form or by onClick event of the "Get some news!" button
     /* Arrow function syntax used for Autobinding, see details here : https://facebook.github.io/react/docs/react-without-es6.html#autobinding */
+    handleChange = ( event ) => {
+        this.setState( { search: event.target.value });
+    }
     fetchNews = async ( event ) => {
 
         event.preventDefault()
@@ -72,15 +83,18 @@ class App extends Component {
         /* ASYNC - AWAIT DOCUMENTATION : https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Op%C3%A9rateurs/await */
 
         try {
+            addNews( this.state.search )
             let _news = await get( ENDPOINTS.NEWS_API_URL, {
                 //YOU NEED TO PROVIDE YOUR "APIXU" API KEY HERE, see /utils/api.js file to grab the DOCUMENTATION file
                 apiKey: NEWS_API_KEY,
                 source: 'techcrunch'
-            } )
+            })
 
             this.setState( {
                 news: _news
-            } )
+            })
+
+
 
         }
         catch ( error ) {
@@ -92,10 +106,9 @@ class App extends Component {
 
 
     //handle display of the received news object
-    displayNews = () => {
+    getCards = () => {
+
         const news = this.state.news
-
-
         /*data looks like that
 
             {
@@ -131,20 +144,25 @@ class App extends Component {
             }
             */
 
-
         if ( news ) {
-
             console.log( news )
 
-            const _title = news.articles[ 0 ].title
 
-            return (
-                <NewsCard picture={ defaultPicture } text={ 'hey' } title={ _title }
-                />
-            )
+
+            return news.articles.filter( article => {
+                return article.title.toLowerCase().indexOf( this.state.search.toLowerCase() ) != -1
+            }).map(
+                article => {
+
+                    return (
+                        <NewsCard picture={ article.urlToImage } text={ article.description } title={ article.title } url={ article.url } />
+                    )
+                }
+                )
         }
 
-        return null
+
+
     }
 
 }
